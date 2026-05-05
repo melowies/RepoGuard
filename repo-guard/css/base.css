@@ -1,0 +1,70 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  min-height: 100%;
+  background: var(--cream);
+}
+
+body {
+  min-height: 100vh;
+  margin: 0;
+  overflow-x: hidden;
+  background:
+    radial-gradient(ellipse at 50% -8%, rgba(255, 255, 255, 0.96) 0 18%, rgba(255, 247, 234, 0.86) 44%, transparent 72%),
+    linear-gradient(180deg, #fff7ed 0%, #fff3f6 45%, #fffaf1 100%);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.5;
+  font-optical-sizing: auto;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+@media (min-width: 821px) and (min-height: 700px) {
+  html,
+  body {
+    scrollbar-width: none;
+  }
+
+  html::-webkit-scrollbar,
+  body::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
+  }
+}
+
+button,
+input {
+  font: inherit;
+}
+
+button {
+  border: 0;
+}
+
+button:focus-visible,
+input:focus-visible {
+  outline: 4px solid rgba(255, 133, 178, 0.28);
+  outline-offset: 4px;
+}
+
+img,
+svg {
+  display: block;
+}
+
+h1,
+h2,
+p {
+  margin: 0;
+}
+
+input {
+  min-width: 0;
+}

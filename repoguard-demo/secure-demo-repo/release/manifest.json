@@ -1,0 +1,13 @@
+{
+  "file_name": "app-v1.0.zip",
+  "file": "app-v1.0.zip",
+  "version": "1.0.0",
+  "sha256": "b10ee38d0e2e844719d1a2377058abbc9cf064f406b683372278c24c5add0454",
+  "timestamp": "2026-05-01T14:36:42Z",
+  "created_at": "2026-05-01T14:36:42Z",
+  "verification_status": "APPROVED",
+  "signature_file": "app-v1.0.zip.sig",
+  "public_key_file": "public_key.pem",
+  "algorithm": "RSA-PSS-SHA256",
+  "signed_payload": "manifest-sha256"
+}

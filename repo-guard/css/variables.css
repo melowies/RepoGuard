@@ -1,0 +1,43 @@
+:root {
+  --font-display: "Nunito", "Quicksand", "Segoe UI Rounded", "Trebuchet MS", Arial, sans-serif;
+  --font-body: "Nunito", "Quicksand", "Segoe UI Rounded", "Segoe UI", Aptos, Arial, sans-serif;
+
+  --cream: #fff8ef;
+  --cream-soft: #fffdf8;
+  --blush: #fff0f6;
+  --blush-strong: #ffd1e2;
+  --pink: #ff76a7;
+  --pink-deep: #ee5d95;
+  --pink-soft: #ffa7c8;
+  --lavender: #a992df;
+  --lavender-deep: #706296;
+  --lavender-soft: #e8dcff;
+  --mint: #9bdccd;
+  --mint-deep: #65b9aa;
+  --ink: #655a86;
+  --muted: #9b90ad;
+  --line: #ead8e5;
+  --white: #fffefe;
+
+  --shadow-card: 0 18px 44px rgba(154, 104, 134, 0.16);
+  --shadow-soft: 0 10px 26px rgba(154, 104, 134, 0.12);
+  --shadow-button: 0 10px 20px rgba(240, 95, 148, 0.25), inset 0 -4px 0 rgba(218, 70, 123, 0.13);
+  --shadow-inner: inset 0 1px 8px rgba(190, 150, 170, 0.08);
+
+  --radius-panel: clamp(30px, 4vw, 46px);
+  --radius-card: 26px;
+  --radius-pill: 999px;
+
+  --page-width: 720px;
+  --desktop-ui-scale: 0.9;
+  --result-desktop-ui-scale: 0.78;
+  --report-desktop-ui-scale: 0.74;
+  --transition-fast: 180ms ease;
+  --transition-medium: 320ms ease;
+
+  --layer-page: 0;
+  --layer-mascot-bg: 1;
+  --layer-card: 2;
+  --layer-mascot: 4;
+  --layer-float: 5;
+}

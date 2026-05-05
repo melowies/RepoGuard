@@ -1,0 +1,17 @@
+name: Risky Deploy Workflow
+
+on:
+  pull_request_target:
+    branches: [ main ]
+
+permissions: write-all
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      DEPLOY_TOKEN: FAKE_TOKEN_DO_NOT_USE_12345
+    steps:
+      - uses: actions/checkout@master
+      - name: Deploy
+        run: echo "Deploying vulnerable demo app"

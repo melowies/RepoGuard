@@ -1,0 +1,586 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>RepoGuard | Repo Güvenlik Analizi</title>
+  <link rel="icon" type="image/png" href="assets/icons/ChatGPT%20Image%201%20May%202026%2022_43_29.png">
+  <link rel="shortcut icon" type="image/png" href="assets/icons/ChatGPT%20Image%201%20May%202026%2022_43_29.png">
+  <link rel="apple-touch-icon" href="assets/icons/ChatGPT%20Image%201%20May%202026%2022_43_29.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body>
+  <main class="home-shell" id="appShell" aria-label="RepoGuard">
+    <section class="app-view search-view is-active" id="searchView" aria-label="RepoGuard arama ekranı">
+      <section class="hero-scene" aria-label="RepoGuard arama ekranı">
+      <div class="sparkle sparkle-large sparkle-left" aria-hidden="true"></div>
+      <div class="sparkle sparkle-small sparkle-left-low" aria-hidden="true"></div>
+      <div class="sparkle sparkle-medium sparkle-right" aria-hidden="true"></div>
+      <div class="accent-lines accent-left" aria-hidden="true">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+
+      <div class="mascot-wrap">
+        <img
+          class="mascot"
+          src="assets/bunnies/search-bunny-foreground.png"
+          alt="RepoGuard arama alanını gösteren sevimli tavşan maskotu"
+        >
+        <p class="speech-bubble" id="speechBubble">Repo'nu buraya yazalım mı?</p>
+      </div>
+
+      <section class="search-card" aria-labelledby="pageTitle">
+        <div class="brand-block">
+          <h1 id="pageTitle" class="logo-word">
+            <span>Repo</span><span>Guard</span>
+            <svg class="logo-shield" viewBox="0 0 56 64" aria-hidden="true">
+              <path d="M28 4 50 12v17c0 15-9.6 25.6-22 31C15.6 54.6 6 44 6 29V12L28 4Z" fill="#f5ddff" stroke="#ad8bdc" stroke-width="3"/>
+              <path d="M20 31v-6a8 8 0 0 1 16 0v6" fill="none" stroke="#8b74b8" stroke-width="4" stroke-linecap="round"/>
+              <rect x="17" y="29" width="22" height="18" rx="5" fill="#ffc0d8" stroke="#8b74b8" stroke-width="3"/>
+              <circle cx="28" cy="38" r="3" fill="#fff9fc"/>
+            </svg>
+          </h1>
+          <p class="subtitle">
+            <span class="tiny-sparkle" aria-hidden="true"></span>
+            Repo Güvenlik Analizi
+            <span class="tiny-sparkle" aria-hidden="true"></span>
+          </p>
+        </div>
+
+        <form class="repo-form" id="repoForm" novalidate>
+          <label class="repo-input-label" for="repoUrl">
+            <span class="github-badge" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <path d="M12 .8a11.2 11.2 0 0 0-3.54 21.82c.56.1.76-.24.76-.54v-2c-3.12.68-3.78-1.34-3.78-1.34-.5-1.3-1.24-1.64-1.24-1.64-1.02-.7.08-.68.08-.68 1.12.08 1.72 1.16 1.72 1.16 1 .1 1.62 1.76 3.2 1.26.1-.72.4-1.22.72-1.5-2.5-.28-5.12-1.24-5.12-5.54 0-1.22.44-2.22 1.16-3-.12-.28-.5-1.42.1-2.96 0 0 .94-.3 3.08 1.14A10.7 10.7 0 0 1 12 6.6c.96 0 1.92.12 2.82.38 2.14-1.44 3.08-1.14 3.08-1.14.6 1.54.22 2.68.1 2.96.72.78 1.16 1.78 1.16 3 0 4.3-2.62 5.26-5.12 5.54.42.36.78 1.06.78 2.14v2.6c0 .3.2.64.78.54A11.2 11.2 0 0 0 12 .8Z"/>
+              </svg>
+            </span>
+            <input id="repoUrl" name="repoUrl" type="url" inputmode="url" autocomplete="url" placeholder="GitHub repo URL'si girin">
+          </label>
+
+          <button class="primary-button" id="submitButton" type="submit">
+            <span class="button-icon" aria-hidden="true">
+              <svg viewBox="0 0 42 46">
+                <path d="M21 3 37 9v13c0 10.9-6.9 18.7-16 22-9.1-3.3-16-11.1-16-22V9l16-6Z" fill="#fff3fa" stroke="#fff" stroke-width="3"/>
+                <path d="m13.5 23 5 5.1L29.6 17" fill="none" stroke="#ff82ad" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </span>
+            <span>Güvenlik Seviyesini Göster</span>
+            <span class="button-glint" aria-hidden="true"></span>
+          </button>
+
+          <p class="helper-text">
+            <span aria-hidden="true"></span>
+            Örn: https://github.com/kullanici/repo
+          </p>
+        </form>
+      </section>
+
+      <section class="attack-entry-card" aria-labelledby="attackEntryTitle">
+        <span class="attack-entry-icon" aria-hidden="true">
+          <svg viewBox="0 0 48 48">
+            <path d="M24 5 41 12v13c0 11-7.2 18.5-17 22-9.8-3.5-17-11-17-22V12l17-7Z" fill="currentColor" opacity=".2"/>
+            <path d="M24 5 41 12v13c0 11-7.2 18.5-17 22-9.8-3.5-17-11-17-22V12l17-7Z" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linejoin="round"/>
+            <path d="M24 16v11" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+            <circle cx="24" cy="34" r="2.8" fill="currentColor"/>
+          </svg>
+        </span>
+        <div class="attack-entry-copy">
+          <h2 id="attackEntryTitle">Canlı Atak Simülasyonu</h2>
+          <p>Demo repoda güvenlik risklerini kontrollü olarak oluşturup skorun ve yayın durumunun nasıl değiştiğini ayrı ekranda gör.</p>
+        </div>
+        <button class="attack-entry-button" id="openAttackButton" type="button">Simülasyonu Aç</button>
+      </section>
+
+      <div class="pastel-landscape" aria-hidden="true">
+        <span class="hill hill-left"></span>
+        <span class="hill hill-center"></span>
+        <span class="hill hill-right"></span>
+        <span class="path-dot dot-one"></span>
+        <span class="path-dot dot-two"></span>
+        <span class="path-dot dot-three"></span>
+        <span class="flower flower-left"></span>
+        <span class="flower flower-right"></span>
+      </div>
+      </section>
+    </section>
+
+    <section class="app-view loading-view" id="loadingView" aria-labelledby="loadingTitle" hidden>
+      <div class="loading-sparkle loading-sparkle-left" aria-hidden="true"></div>
+      <div class="loading-sparkle loading-sparkle-right" aria-hidden="true"></div>
+      <div class="loading-sparkle loading-sparkle-low" aria-hidden="true"></div>
+
+      <div class="brand-block loading-brand">
+        <h1 class="logo-word">
+          <span>Repo</span><span>Guard</span>
+          <svg class="logo-shield" viewBox="0 0 56 64" aria-hidden="true">
+            <path d="M28 4 50 12v17c0 15-9.6 25.6-22 31C15.6 54.6 6 44 6 29V12L28 4Z" fill="#f5ddff" stroke="#ad8bdc" stroke-width="3"/>
+            <path d="M20 31v-6a8 8 0 0 1 16 0v6" fill="none" stroke="#8b74b8" stroke-width="4" stroke-linecap="round"/>
+            <rect x="17" y="29" width="22" height="18" rx="5" fill="#ffc0d8" stroke="#8b74b8" stroke-width="3"/>
+            <circle cx="28" cy="38" r="3" fill="#fff9fc"/>
+          </svg>
+        </h1>
+        <p class="subtitle">
+          <span class="tiny-sparkle" aria-hidden="true"></span>
+          Repo Güvenlik Analizi
+          <span class="tiny-sparkle" aria-hidden="true"></span>
+        </p>
+      </div>
+
+      <section class="loading-card" aria-live="polite">
+        <div class="loading-mascot-stage" aria-hidden="true">
+          <span class="hole-glow"></span>
+          <img
+            class="loading-mascot"
+            src="assets/bunnies/loading-bunny-foreground.png"
+            alt=""
+          >
+        </div>
+
+        <div class="loading-copy">
+          <h2 id="loadingTitle">Repo analiz ediliyor<span class="animated-dots" aria-hidden="true"><span>.</span><span>.</span><span>.</span></span></h2>
+          <p>Dosya parmak izi, imza ve güvenlik kontrolleri hazırlanıyor.</p>
+        </div>
+
+        <div class="progress-track" aria-hidden="true">
+          <span></span>
+        </div>
+
+        <div class="repo-url-pill" id="loadingRepoUrl">https://github.com/kullanici/repo</div>
+
+        <aside class="reassurance-box" aria-label="Güvenlik notu">
+          <span class="reassurance-icon" aria-hidden="true">
+            <svg viewBox="0 0 36 42">
+              <rect x="7" y="17" width="22" height="19" rx="6" fill="#9bdccd" stroke="#65b9aa" stroke-width="3"/>
+              <path d="M12 18v-5a6 6 0 0 1 12 0v5" fill="none" stroke="#8ccfc1" stroke-width="4" stroke-linecap="round"/>
+              <path d="m13.5 27 3.5 3.7 6.5-7.2" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </span>
+          <div>
+            <strong>Endişelenme, her şey güvende!</strong>
+            <p>Kişisel verilerin saklanmaz.</p>
+          </div>
+        </aside>
+      </section>
+    </section>
+
+    <section class="app-view result-view" id="resultView" aria-labelledby="resultPageTitle" hidden>
+      <div class="result-sparkle result-sparkle-left" aria-hidden="true"></div>
+      <div class="result-sparkle result-sparkle-right" aria-hidden="true"></div>
+      <div class="result-sparkle result-sparkle-low" aria-hidden="true"></div>
+
+      <div class="result-mascot-wrap">
+        <span class="danger-orbit danger-cracked-shield" aria-hidden="true">
+          <svg viewBox="0 0 80 90">
+            <path d="M40 5 69 17v24c0 19-12 33-29 42C23 74 11 60 11 41V17L40 5Z" fill="#ffd3e1" stroke="#8c6fa8" stroke-width="4"/>
+            <path d="M40 14 59 22v18c0 13-7.4 23-19 30-11.6-7-19-17-19-30V22l19-8Z" fill="#f47aa6" opacity=".78"/>
+            <path d="m41 9-8 25 13 2-9 28 17-33-13-2 10-20" fill="#6f5b8e"/>
+            <path d="M13 64c5 6 13 12 27 19" fill="none" stroke="#fff5fb" stroke-width="3" opacity=".8"/>
+          </svg>
+        </span>
+        <span class="danger-orbit danger-warning-icon" aria-hidden="true">
+          <svg viewBox="0 0 70 62">
+            <path d="M35 6 64 56H6L35 6Z" fill="#ffd7df" stroke="#ef6695" stroke-width="5" stroke-linejoin="round"/>
+            <path d="M35 22v18" stroke="#a94468" stroke-width="7" stroke-linecap="round"/>
+            <circle cx="35" cy="48" r="4" fill="#a94468"/>
+          </svg>
+        </span>
+        <img
+          id="resultMascot"
+          class="result-mascot"
+          src="assets/bunnies/result-bunny-shield.png"
+          alt="Kalkan tutan mutlu RepoGuard tavşan maskotu"
+        >
+        <p class="speech-bubble result-speech-bubble">Bu repo gayet güvende!</p>
+      </div>
+
+      <section class="result-panel" aria-label="RepoGuard analiz sonucu">
+        <div class="brand-block result-brand">
+          <h1 id="resultPageTitle" class="logo-word result-logo">
+            <span>Repo</span><span>Guard</span>
+            <svg class="logo-shield" viewBox="0 0 56 64" aria-hidden="true">
+              <path d="M28 4 50 12v17c0 15-9.6 25.6-22 31C15.6 54.6 6 44 6 29V12L28 4Z" fill="#f5ddff" stroke="#ad8bdc" stroke-width="3"/>
+              <path d="M20 31v-6a8 8 0 0 1 16 0v6" fill="none" stroke="#8b74b8" stroke-width="4" stroke-linecap="round"/>
+              <rect x="17" y="29" width="22" height="18" rx="5" fill="#ffc0d8" stroke="#8b74b8" stroke-width="3"/>
+              <circle cx="28" cy="38" r="3" fill="#fff9fc"/>
+            </svg>
+          </h1>
+          <p class="subtitle result-subtitle">
+            <span class="tiny-sparkle" aria-hidden="true"></span>
+            Repo Güvenlik Analizi
+            <span class="tiny-sparkle" aria-hidden="true"></span>
+          </p>
+        </div>
+
+        <section class="score-panel" aria-label="Güvenlik puanı">
+          <div class="score-copy">
+            <p class="score-label">Güvenlik Skoru</p>
+            <p class="score-value"><span id="resultScore">92</span><small>/100</small></p>
+          </div>
+
+          <div class="score-status-copy">
+            <span class="result-status-pill" id="resultStatus">
+              <svg class="status-icon status-icon-safe" viewBox="0 0 28 32" aria-hidden="true">
+                <path d="M14 2 25 6v9c0 7-4.8 12.3-11 15C7.8 27.3 3 22 3 15V6l11-4Z" fill="none" stroke="currentColor" stroke-width="3"/>
+                <path d="m9 16 3 3.1 7-8" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              <svg class="status-icon status-icon-warning" viewBox="0 0 36 32" aria-hidden="true">
+                <path d="M18 3 33 29H3L18 3Z" fill="currentColor" opacity=".9"/>
+                <path d="M18 11v9" stroke="#fff" stroke-width="4" stroke-linecap="round"/>
+                <circle cx="18" cy="25" r="2.2" fill="#fff"/>
+              </svg>
+              <span>Güvenli</span>
+            </span>
+            <span class="result-decision-badge decision-safe" id="resultDecisionBadge">ONAY</span>
+            <p class="score-message" id="resultSuccessText">Yüksek Güvenlik Seviyesi</p>
+          </div>
+        </section>
+
+        <section class="repo-summary" aria-label="Analiz edilen repository">
+          <span class="github-badge repo-summary-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24">
+              <path d="M12 .8a11.2 11.2 0 0 0-3.54 21.82c.56.1.76-.24.76-.54v-2c-3.12.68-3.78-1.34-3.78-1.34-.5-1.3-1.24-1.64-1.24-1.64-1.02-.7.08-.68.08-.68 1.12.08 1.72 1.16 1.72 1.16 1 .1 1.62 1.76 3.2 1.26.1-.72.4-1.22.72-1.5-2.5-.28-5.12-1.24-5.12-5.54 0-1.22.44-2.22 1.16-3-.12-.28-.5-1.42.1-2.96 0 0 .94-.3 3.08 1.14A10.7 10.7 0 0 1 12 6.6c.96 0 1.92.12 2.82.38 2.14-1.44 3.08-1.14 3.08-1.14.6 1.54.22 2.68.1 2.96.72.78 1.16 1.78 1.16 3 0 4.3-2.62 5.26-5.12 5.54.42.36.78 1.06.78 2.14v2.6c0 .3.2.64.78.54A11.2 11.2 0 0 0 12 .8Z"/>
+            </svg>
+          </span>
+          <div class="repo-summary-copy">
+            <h2 id="resultRepoName">kullanici-repo</h2>
+            <p id="resultRepoUrl">https://github.com/kullanici/repo</p>
+          </div>
+        </section>
+
+        <section class="checks-grid" id="resultChecks" aria-label="Kontrol sonuçları">
+          <article class="result-check-card">
+            <span class="check-icon fingerprint-icon" aria-hidden="true"></span>
+            <h2>SHA-256</h2>
+            <span class="check-status">Geçti</span>
+          </article>
+          <article class="result-check-card">
+            <span class="check-icon document-icon" aria-hidden="true"></span>
+            <h2>Dijital İmza</h2>
+            <span class="check-status">Geçerli</span>
+          </article>
+          <article class="result-check-card">
+            <span class="check-icon search-icon" aria-hidden="true"></span>
+            <h2>Gizli Bilgi</h2>
+            <span class="check-status">Temiz</span>
+          </article>
+          <article class="result-check-card">
+            <span class="check-icon branch-icon" aria-hidden="true"></span>
+            <h2>Otomasyon</h2>
+            <span class="check-status">Düşük Risk</span>
+          </article>
+        </section>
+
+        <aside class="positive-message result-recommendation" aria-label="Sonuç önerisi">
+          <span class="recommendation-icon" aria-hidden="true">
+            <svg class="recommendation-safe-icon" viewBox="0 0 52 58">
+              <path d="M26 4 46 12v16c0 13.6-8.6 23.2-20 27.5C14.6 51.2 6 41.6 6 28V12l20-8Z" fill="currentColor" opacity=".22"/>
+              <path d="M26 4 46 12v16c0 13.6-8.6 23.2-20 27.5C14.6 51.2 6 41.6 6 28V12l20-8Z" fill="none" stroke="currentColor" stroke-width="4"/>
+              <path d="m17 30 6 6.2L36 22" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <svg class="recommendation-warning-icon" viewBox="0 0 52 58">
+              <path d="M26 4 46 12v16c0 13.6-8.6 23.2-20 27.5C14.6 51.2 6 41.6 6 28V12l20-8Z" fill="currentColor" opacity=".22"/>
+              <path d="M26 4 46 12v16c0 13.6-8.6 23.2-20 27.5C14.6 51.2 6 41.6 6 28V12l20-8Z" fill="none" stroke="currentColor" stroke-width="4"/>
+              <path d="M26 17v17" stroke="currentColor" stroke-width="6" stroke-linecap="round"/>
+              <circle cx="26" cy="42" r="3.2" fill="currentColor"/>
+            </svg>
+          </span>
+          <p id="resultPositiveMessage">Güzel iş! Bu repo güvenli görünüyor.<br>Yoluna güvenle devam edebilirsin!</p>
+          <span class="message-sparkle" aria-hidden="true"></span>
+        </aside>
+
+        <button class="result-report-button" type="button">
+          <span class="report-button-icon" aria-hidden="true">
+            <svg viewBox="0 0 42 46">
+              <path d="M12 5h14l8 8v26a4 4 0 0 1-4 4H12a4 4 0 0 1-4-4V9a4 4 0 0 1 4-4Z" fill="currentColor" opacity=".2"/>
+              <path d="M12 5h14l8 8v26a4 4 0 0 1-4 4H12a4 4 0 0 1-4-4V9a4 4 0 0 1 4-4Z" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linejoin="round"/>
+              <path d="M26 5v9h8" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M15 23h12M15 31h9" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"/>
+            </svg>
+          </span>
+          <span>Ayrıntılı Rapor Göster</span>
+          <span class="report-button-sparkle" aria-hidden="true"></span>
+        </button>
+      </section>
+
+      <div class="result-landscape pastel-landscape" aria-hidden="true">
+        <span class="hill hill-left"></span>
+        <span class="hill hill-center"></span>
+        <span class="hill hill-right"></span>
+        <span class="path-dot dot-one"></span>
+        <span class="path-dot dot-two"></span>
+        <span class="flower flower-left"></span>
+        <span class="flower flower-right"></span>
+      </div>
+    </section>
+
+    <section class="app-view attack-view" id="attackView" aria-labelledby="attackPageTitle" hidden>
+      <div class="attack-sparkle attack-sparkle-left" aria-hidden="true"></div>
+      <div class="attack-sparkle attack-sparkle-right" aria-hidden="true"></div>
+
+      <section class="attack-panel" aria-label="RepoGuard canlı atak simülasyonu">
+        <button class="attack-back-button" type="button" data-attack-back="true">Ana ekrana dön</button>
+
+        <div class="attack-hero">
+          <img
+            class="attack-page-mascot"
+            src="assets/bunnies/controlled-bunny-foreground.png"
+            alt="Kontrollü güvenlik testi yapan RepoGuard tavşan maskotu"
+          >
+          <div class="attack-hero-copy">
+            <p class="attack-kicker">Opsiyonel demo aracı</p>
+            <h1 id="attackPageTitle">Canlı Atak Simülasyonu</h1>
+            <p>Bu ekran, rapordan ayrı çalışır. Demo repoda kontrollü risk senaryoları üretir ve RepoGuard kararının nasıl değiştiğini gösterir.</p>
+          </div>
+        </div>
+
+        <section class="attack-action-panel" aria-label="Simülasyon seçenekleri">
+          <div class="attack-action-heading">
+            <h2>Bir senaryo seç</h2>
+            <p>Simülasyon yalnızca demo ortamı içindir; gerçek repolarda değişiklik yapmadan önce tarama sonucunu ayrıca kontrol et.</p>
+          </div>
+          <div class="attack-actions" id="attackActions">
+            <button class="attack-action-button reset-action" type="button" data-attack-reset="true">Referansı sıfırla</button>
+            <button class="attack-action-button" type="button" data-attack-action="tamper-release">Yayın dosyasını değiştir</button>
+            <button class="attack-action-button" type="button" data-attack-action="leak-secret">Gizli bilgi ekle</button>
+            <button class="attack-action-button" type="button" data-attack-action="risky-workflow">Riskli otomasyon ekle</button>
+            <button class="attack-action-button" type="button" data-attack-action="break-signature">İmzayı boz</button>
+          </div>
+        </section>
+
+        <section class="attack-output" id="attackOutput" aria-live="polite">
+          <p class="empty-detail">Sonucu görmek için bir simülasyon seç.</p>
+        </section>
+      </section>
+    </section>
+
+    <section class="app-view report-view" id="reportView" aria-labelledby="reportPageTitle" hidden>
+      <div class="report-sparkle report-sparkle-left" aria-hidden="true"></div>
+      <div class="report-sparkle report-sparkle-right" aria-hidden="true"></div>
+      <div class="report-sparkle report-sparkle-low" aria-hidden="true"></div>
+
+      <div class="report-mascot-wrap">
+        <img
+          class="report-mascot"
+          src="assets/bunnies/report-bunny-inspector.png"
+          alt="Gozluk takan, buyutec ve pano tutan RepoGuard tavsan guvenlik mufettisi"
+        >
+        <p class="speech-bubble report-speech-bubble">Sorunları tek tek inceledim!</p>
+      </div>
+
+      <section class="report-panel" aria-label="RepoGuard ayrıntılı güvenlik raporu">
+        <div class="brand-block report-brand">
+          <h1 id="reportPageTitle" class="logo-word report-logo">
+            <span>Repo</span><span>Guard</span>
+            <svg class="logo-shield" viewBox="0 0 56 64" aria-hidden="true">
+              <path d="M28 4 50 12v17c0 15-9.6 25.6-22 31C15.6 54.6 6 44 6 29V12L28 4Z" fill="#f5ddff" stroke="#ad8bdc" stroke-width="3"/>
+              <path d="M20 31v-6a8 8 0 0 1 16 0v6" fill="none" stroke="#8b74b8" stroke-width="4" stroke-linecap="round"/>
+              <rect x="17" y="29" width="22" height="18" rx="5" fill="#ffc0d8" stroke="#8b74b8" stroke-width="3"/>
+              <circle cx="28" cy="38" r="3" fill="#fff9fc"/>
+            </svg>
+          </h1>
+          <p class="subtitle report-subtitle">
+            <span class="tiny-sparkle" aria-hidden="true"></span>
+            Ayrıntılı Güvenlik Raporu
+            <span class="tiny-sparkle" aria-hidden="true"></span>
+          </p>
+        </div>
+
+        <section class="report-summary-grid" aria-label="Rapor özeti">
+          <article class="report-summary-card summary-score">
+            <span class="report-summary-icon" aria-hidden="true">
+              <svg viewBox="0 0 48 48">
+                <circle cx="24" cy="24" r="18" fill="#f6efff" stroke="currentColor" stroke-width="4"/>
+                <circle cx="24" cy="24" r="10" fill="currentColor" opacity=".18"/>
+                <path d="m24 15 2.5 5 5.5.8-4 3.9.9 5.5-4.9-2.6-4.9 2.6.9-5.5-4-3.9 5.5-.8L24 15Z" fill="currentColor"/>
+              </svg>
+            </span>
+            <div>
+              <p>Skor</p>
+              <strong>37<small>/100</small></strong>
+            </div>
+          </article>
+
+          <article class="report-summary-card summary-status">
+            <span class="report-summary-icon" aria-hidden="true">
+              <svg viewBox="0 0 48 48">
+                <path d="M24 8 43 40H5L24 8Z" fill="#fff5df" stroke="currentColor" stroke-width="4" stroke-linejoin="round"/>
+                <path d="M24 19v10" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>
+                <circle cx="24" cy="35" r="2.7" fill="currentColor"/>
+              </svg>
+            </span>
+            <div>
+              <p>Durum</p>
+              <strong>Dikkat</strong>
+            </div>
+          </article>
+
+          <article class="report-summary-card summary-open">
+            <span class="report-summary-icon" aria-hidden="true">
+              <svg viewBox="0 0 48 48">
+                <path d="M24 11c8 0 13 5.7 13 13s-5 13-13 13-13-5.7-13-13 5-13 13-13Z" fill="#fff1f6" stroke="currentColor" stroke-width="4"/>
+                <path d="M14 9 18 15M34 9l-4 6M7 24h7M34 24h7M13 39l5-6M35 39l-5-6M24 15v22" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"/>
+              </svg>
+            </span>
+            <div>
+              <p>Açık Bulgu</p>
+              <strong>4</strong>
+            </div>
+          </article>
+
+          <article class="report-summary-card summary-files">
+            <span class="report-summary-icon" aria-hidden="true">
+              <svg viewBox="0 0 48 48">
+                <path d="M13 7h15l8 8v26H13V7Z" fill="#e9fbfb" stroke="currentColor" stroke-width="4" stroke-linejoin="round"/>
+                <path d="M28 7v10h8M18 25h13M18 32h10" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"/>
+              </svg>
+            </span>
+            <div>
+              <p>Etkilenen Dosya</p>
+              <strong>3</strong>
+            </div>
+          </article>
+        </section>
+
+        <div class="report-section-heading">
+          <span class="report-list-icon" aria-hidden="true">
+            <svg viewBox="0 0 36 36">
+              <circle cx="9" cy="10" r="2.4" fill="currentColor"/>
+              <circle cx="9" cy="18" r="2.4" fill="currentColor"/>
+              <circle cx="9" cy="26" r="2.4" fill="currentColor"/>
+              <path d="M16 10h12M16 18h12M16 26h12" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+            </svg>
+          </span>
+          <h2>Bulunan sorunlar</h2>
+          <span class="report-heading-line" aria-hidden="true"></span>
+        </div>
+
+        <section class="findings-list" aria-label="Bulgu listesi">
+          <article class="finding-card severity-critical">
+            <span class="finding-icon finding-secret-icon" aria-hidden="true">
+              <svg viewBox="0 0 72 72">
+                <rect x="19" y="30" width="34" height="29" rx="7" fill="currentColor" opacity=".9"/>
+                <path d="M25 30v-9a11 11 0 0 1 22 0v9" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round"/>
+                <path d="M28 44h16M31 50l10-12M41 50 31 38" stroke="#fff" stroke-width="5" stroke-linecap="round"/>
+              </svg>
+            </span>
+            <div class="finding-copy">
+              <h3>src/config.js</h3>
+              <p class="finding-title">Kod içi gizli bilgi</p>
+              <p class="finding-meta">Satır 18 • Gizli değer maskelendi</p>
+              <code>API_KEY = "****"</code>
+            </div>
+            <span class="severity-badge severity-critical-badge">
+              <span aria-hidden="true">!</span>
+              Kritik
+            </span>
+          </article>
+
+          <article class="finding-card severity-high">
+            <span class="finding-icon finding-workflow-icon" aria-hidden="true">
+              <svg viewBox="0 0 72 72">
+                <rect x="14" y="13" width="18" height="18" rx="6" fill="currentColor" opacity=".22"/>
+                <rect x="40" y="41" width="18" height="18" rx="6" fill="currentColor" opacity=".22"/>
+                <rect x="14" y="41" width="18" height="18" rx="6" fill="currentColor" opacity=".22"/>
+                <path d="M23 31v10M32 22h16v19M23 50h17" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                <circle cx="23" cy="22" r="5" fill="currentColor"/>
+                <circle cx="23" cy="50" r="5" fill="currentColor"/>
+                <circle cx="49" cy="50" r="5" fill="currentColor"/>
+              </svg>
+            </span>
+            <div class="finding-copy">
+              <h3>.github/workflows/deploy.yml</h3>
+              <p class="finding-title">permissions: write-all</p>
+              <p class="finding-meta">Satır 6</p>
+            </div>
+            <span class="severity-badge severity-high-badge">
+              <span aria-hidden="true">↑</span>
+              Yüksek
+            </span>
+          </article>
+
+          <article class="finding-card severity-high">
+            <span class="finding-icon finding-archive-icon" aria-hidden="true">
+              <svg viewBox="0 0 72 72">
+                <path d="M19 12h24l10 10v36H19V12Z" fill="currentColor" opacity=".2" stroke="currentColor" stroke-width="4" stroke-linejoin="round"/>
+                <path d="M43 12v12h10" fill="none" stroke="currentColor" stroke-width="4" stroke-linejoin="round"/>
+                <rect x="14" y="38" width="31" height="20" rx="5" fill="currentColor"/>
+                <path d="M20 50h19M20 45h19" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+                <circle cx="51" cy="51" r="12" fill="#f2fffd" stroke="currentColor" stroke-width="3"/>
+                <path d="M46 51h10M52 47l4 4-4 4" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </span>
+            <div class="finding-copy">
+              <h3>release/app-v1.0.zip</h3>
+              <p class="finding-title">SHA-256 uyuşmazlığı</p>
+              <p class="finding-meta">Dosya bütünlüğü bozulmuş</p>
+            </div>
+            <span class="severity-badge severity-high-badge">
+              <span aria-hidden="true">↑</span>
+              Yüksek
+            </span>
+          </article>
+
+          <article class="finding-card severity-medium">
+            <span class="finding-icon finding-package-icon" aria-hidden="true">
+              <svg viewBox="0 0 72 72">
+                <path d="M17 22 36 12l19 10v27L36 60 17 49V22Z" fill="#fff6df" stroke="currentColor" stroke-width="4" stroke-linejoin="round"/>
+                <path d="m17 22 19 11 19-11M36 33v27M27 17l19 11" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/>
+                <circle cx="53" cy="51" r="12" fill="#fffaf0" stroke="currentColor" stroke-width="3"/>
+                <path d="M53 44v9" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+                <circle cx="53" cy="58" r="2.4" fill="currentColor"/>
+              </svg>
+            </span>
+            <div class="finding-copy">
+              <h3>package-lock.json</h3>
+              <p class="finding-title">Riskli bağımlılık tespit edildi</p>
+              <p class="finding-meta">1 paket güncellenmeli</p>
+            </div>
+            <span class="severity-badge severity-medium-badge">
+              <span aria-hidden="true">−</span>
+              Orta
+            </span>
+          </article>
+        </section>
+
+        <aside class="report-info-box security-note-box" aria-label="Güvenlik notu">
+          <div class="report-info-heading">
+            <span class="report-info-icon metric-letter" aria-hidden="true">i</span>
+            <h2>Rapor notu</h2>
+          </div>
+          <div class="report-info-content">
+            <p>Yayın doğrulaması ve repo bütünlüğü kontrolleri tamamlandı.</p>
+            <p class="report-info-muted">Hassas değerler ekranda gösterilmeden önce maskelenir.</p>
+          </div>
+        </aside>
+
+        <aside class="report-info-box actions-box" aria-label="Önerilen aksiyonlar">
+          <div class="report-info-heading">
+            <span class="report-info-icon actions-main-icon metric-letter" aria-hidden="true">✓</span>
+            <h2>Önerilen sonraki adımlar</h2>
+          </div>
+          <div class="report-info-content">
+            <ul>
+              <li>Gizli bilgileri kaldır veya ortam değişkeni kullan</li>
+              <li>Otomasyon izinlerini daralt</li>
+              <li>Yayın dosyasını yeniden imzala ve dosya parmak izini doğrula</li>
+              <li>Bağımlılıkları güncelle</li>
+            </ul>
+          </div>
+        </aside>
+      </section>
+    </section>
+
+  </main>
+
+  <script src="js/app.js" defer></script>
+</body>
+</html>

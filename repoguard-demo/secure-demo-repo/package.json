@@ -1,0 +1,10 @@
+{
+  "name": "secure-demo-repo",
+  "version": "1.0.0",
+  "description": "Secure demo repo for RepoGuard",
+  "dependencies": {
+    "lodash": "4.17.21",
+    "express": "4.18.2"
+  },
+  "devDependencies": {}
+}

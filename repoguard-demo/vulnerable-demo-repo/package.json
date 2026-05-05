@@ -1,0 +1,12 @@
+{
+  "name": "vulnerable-demo-repo",
+  "version": "1.0.0",
+  "description": "Intentional vulnerable demo repo for RepoGuard",
+  "dependencies": {
+    "lodash": "4.17.15",
+    "express": "4.16.0"
+  },
+  "devDependencies": {
+    "debug": "2.6.8"
+  }
+}

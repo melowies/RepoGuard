@@ -1,0 +1,34 @@
+# Python cache and test artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Virtual environments and local configuration
+.venv/
+venv/
+env/
+.env
+.env.*
+!.env.example
+
+# Logs and temporary files
+*.log
+*.tmp
+*.bak
+*.swp
+repoguard-dashboard-*/
+repoguard-demo/.live-attack-workspace/
+repoguard-demo/attack-workspace/
+
+# Operating system files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Demo/private signing material.
+# Public keys and prepared demo signatures are intentionally kept.
+**/private_key*.pem
+repoguard-demo/signing_keys_DEMO_ONLY/*.pem

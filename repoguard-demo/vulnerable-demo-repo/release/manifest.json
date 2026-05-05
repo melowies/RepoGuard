@@ -1,0 +1,8 @@
+{
+  "file": "app-v1.0.zip",
+  "sha256": "intentionally_wrong_hash_for_demo",
+  "actual_demo_sha256": "2e6c8b45b43d83bd2b55dc269a9995303d93b421dd22674441225dfcc6f6ba75",
+  "signature_file": "app-v1.0.zip.sig",
+  "public_key_file": "public_key.pem",
+  "expected_status": "BLOCKED"
+}
