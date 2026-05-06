@@ -553,8 +553,8 @@ class CICDRiskScanner:
                 line_number,
                 detected_config,
                 risk_level,
-                f"The workflow grants write access for {permission_name}, increasing the impact of a compromised workflow run.",
-                "Grant only the permissions each job needs, and prefer read-only access unless write access is required.",
+                f"Workflow, {permission_name} için yazma erişimi veriyor; bu da workflow ele geçirildiğinde oluşabilecek etkiyi artırır.",
+                "Her job'a yalnızca ihtiyaç duyduğu izinleri ver ve yazma erişimi gerekmedikçe salt okunur izinleri tercih et.",
             )
         )
         return BroadPermission(line_number, detected_config, risk_level)

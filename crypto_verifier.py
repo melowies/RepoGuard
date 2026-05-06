@@ -33,6 +33,7 @@ except ImportError:  # pragma: no cover - depends on the user's environment.
 
 
 ALGORITHM = "RSA-PSS-SHA256"
+NOT_APPLICABLE = "Not Applicable"
 CHUNK_SIZE = 1024 * 1024
 DEFAULT_MANIFEST_NAME = "manifest.json"
 PRIVATE_KEY_NAME = "private_key.pem"
@@ -241,16 +242,30 @@ def verify_release(
     hash_match = current_sha256 == stored_sha256
 
     if not signature_file.exists():
+        signature_message = (
+            "No signature file was found; signature verification is not applicable."
+            if hash_match
+            else (
+                "The current release file does not match the stored SHA-256; "
+                "signature verification is not applicable because no signature file was found."
+            )
+        )
         return _verification_result(
             file_name=file_name,
             current_sha256=current_sha256,
             stored_sha256=stored_sha256,
             hash_match=hash_match,
-            signature_status="Missing",
+            signature_status=NOT_APPLICABLE,
             integrity_status="Verified" if hash_match else "Failed",
-            release_status="BLOCKED",
+            release_status="APPROVED" if hash_match else "BLOCKED",
             algorithm=algorithm,
-            message=f"Missing signature file: {signature_file}",
+            message=signature_message,
+            manifest_sha256=manifest_sha256,
+            signed_payload=signed_payload,
+            manifest=manifest_data,
+            manifest_signature_status=NOT_APPLICABLE,
+            signature_covers_current_release=None,
+            manifest_verification_status="Verified" if hash_match else "Hash Mismatch",
         )
     if not public_key_file.exists():
         return _verification_result(
@@ -258,7 +273,7 @@ def verify_release(
             current_sha256=current_sha256,
             stored_sha256=stored_sha256,
             hash_match=hash_match,
-            signature_status="Missing",
+            signature_status="Invalid",
             integrity_status="Verified" if hash_match else "Failed",
             release_status="BLOCKED",
             algorithm=algorithm,

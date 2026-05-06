@@ -737,6 +737,8 @@
 
   .score-status-copy {
     justify-items: center;
+    justify-self: center;
+    max-width: 100%;
   }
 
   .score-label {
@@ -764,6 +766,8 @@
   }
 
   .score-message {
+    margin-top: 4px;
+    max-width: min(100%, 320px);
     font-size: 14px;
   }
 

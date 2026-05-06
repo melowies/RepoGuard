@@ -43,6 +43,8 @@ DEMO_REPOS = {
     "secure-demo-repo": DEMO_ROOT / "secure-demo-repo",
 }
 DEFAULT_RELEASE_FILE_NAME = "app-v1.0.zip"
+NOT_APPLICABLE = "Not Applicable"
+NO_RELEASE_MESSAGE = "No release artifacts were found; release verification is not applicable."
 DEFAULT_DB_PATH = SCRIPT_DIR / "vulnerability_db.json"
 ATTACK_WORKSPACE = DEMO_ROOT / ".live-attack-workspace"
 ATTACK_WORKSPACE_LOCK = threading.Lock()
@@ -158,9 +160,9 @@ def build_dashboard_summary(
                 "secrets_found": len(secrets),
                 "vulnerable_dependencies": len(dependencies),
                 "cicd_risks": len(cicd_risks),
-                "hash_status": "Passed" if crypto_result.get("hash_match") is True else "Failed",
+                "hash_status": _hash_status(crypto_result),
                 "signature_status": str(crypto_result.get("signature_status", "Error")),
-                "merkle_status": "Passed" if repository_integrity["root_match"] else "Failed",
+                "merkle_status": _repository_integrity_status(repository_integrity),
             },
             "findings": {
                 "secrets": sanitize_secret_findings(secrets),
@@ -433,17 +435,8 @@ def verify_repo_release(repo_path: Path, release_file_name: str = DEFAULT_RELEAS
     public_key_file = release_dir / "public_key.pem"
     manifest_file = release_dir / "manifest.json"
 
-    if not release_file.exists():
-        return _crypto_error_result(
-            file_name=release_file_name,
-            message=f"Missing release file: {release_file}",
-        )
-    if not manifest_file.exists():
-        return _crypto_error_result(
-            file_name=release_file.name,
-            current_sha256=_safe_sha256(release_file),
-            message=f"Missing manifest file: {manifest_file}",
-        )
+    if not _has_release_artifact(release_file):
+        return _crypto_not_applicable_result(file_name=release_file_name, message=NO_RELEASE_MESSAGE)
 
     try:
         return verify_release(
@@ -462,6 +455,9 @@ def verify_repo_release(repo_path: Path, release_file_name: str = DEFAULT_RELEAS
 
 def build_repository_integrity_report(repo_path: Path) -> dict[str, Any]:
     """Compare a small virtual repository file set with the trusted demo baseline."""
+
+    if not _has_trusted_repository_reference(repo_path):
+        return _repository_integrity_not_applicable()
 
     baseline_repo = DEMO_REPOS["secure-demo-repo"]
     entries: list[dict[str, Any]] = []
@@ -500,6 +496,8 @@ def build_repository_integrity_report(repo_path: Path) -> dict[str, Any]:
         "expected_root": expected_root,
         "root_match": root_match,
         "changed_files": changed_files,
+        "status": "Verified" if root_match else "Failed",
+        "applicable": True,
         "explanation": (
             "Every virtual repository file matched the trusted baseline, so the Merkle Root is stable."
             if root_match
@@ -625,10 +623,10 @@ def calculate_security_score(
 def decide_release_status(score: int, crypto_result: dict[str, Any]) -> str:
     """Apply the release decision rule."""
 
-    signature_status = str(crypto_result.get("signature_status", "Error"))
-    hash_match = crypto_result.get("hash_match") is True
+    hash_ok = not _hash_check_failed(crypto_result)
+    signature_ok = not _signature_check_failed(crypto_result)
     repository_ok = crypto_result.get("repository_integrity_match") is not False
-    if score >= 80 and signature_status == "Valid" and hash_match and repository_ok:
+    if score >= 80 and hash_ok and signature_ok and repository_ok:
         return "APPROVED"
     return "BLOCKED"
 
@@ -930,9 +928,9 @@ def render_html_dashboard(payload: dict[str, Any]) -> str:
       {_metric_card("Secrets Found", summary["secrets_found"], _count_class(summary["secrets_found"]))}
       {_metric_card("Dependencies", summary["vulnerable_dependencies"], _count_class(summary["vulnerable_dependencies"]))}
       {_metric_card("CI/CD Risks", summary["cicd_risks"], _count_class(summary["cicd_risks"]))}
-      {_metric_card("Hash Status", summary["hash_status"], "green" if summary["hash_status"] == "Passed" else "red")}
+      {_metric_card("Hash Status", summary["hash_status"], _check_status_class(summary["hash_status"]))}
       {_metric_card("Signature", summary["signature_status"], _signature_class(summary["signature_status"]))}
-      {_metric_card("Merkle Root", summary["merkle_status"], "green" if summary["merkle_status"] == "Passed" else "red")}
+      {_metric_card("Merkle Root", summary["merkle_status"], _check_status_class(summary["merkle_status"]))}
     </div>
     {_security_pipeline_section(payload)}
     <div class="grid">
@@ -1674,9 +1672,9 @@ def render_attack_simulation_page(simulation: dict[str, Any]) -> str:
       {_metric_card("Bulunan Secret", summary["secrets_found"], _count_class(summary["secrets_found"]))}
       {_metric_card("Bağımlılıklar", summary["vulnerable_dependencies"], _count_class(summary["vulnerable_dependencies"]))}
       {_metric_card("CI/CD Riskleri", summary["cicd_risks"], _count_class(summary["cicd_risks"]))}
-      {_metric_card("Hash Kontrolü", _display_value(summary["hash_status"]), "green" if summary["hash_status"] == "Passed" else "red")}
+      {_metric_card("Hash Kontrolü", _display_value(summary["hash_status"]), _check_status_class(summary["hash_status"]))}
       {_metric_card("Dijital İmza", _display_value(summary["signature_status"]), _signature_class(summary["signature_status"]))}
-      {_metric_card("Merkle Root", _display_value(summary["merkle_status"]), "green" if summary["merkle_status"] == "Passed" else "red")}
+      {_metric_card("Merkle Root", _display_value(summary["merkle_status"]), _check_status_class(summary["merkle_status"]))}
     </div>
 
     <div class="comparison">
@@ -1760,9 +1758,9 @@ def _calculate_strict_penalties(
         penalty = _severity_penalty(finding.get("risk_level"), CICD_PENALTIES)
         if penalty:
             penalties.append({"area": "cicd", "penalty": penalty, "severity": finding.get("risk_level")})
-    if crypto_result.get("hash_match") is not True:
+    if _hash_check_failed(crypto_result):
         penalties.append({"area": "crypto", "penalty": HASH_MISMATCH_PENALTY, "severity": "Hash mismatch"})
-    if crypto_result.get("signature_status") != "Valid":
+    if _signature_check_failed(crypto_result):
         penalties.append(
             {
                 "area": "crypto",
@@ -1806,19 +1804,95 @@ def _crypto_error_result(
         "integrity_status": "Failed",
         "release_status": "BLOCKED",
         "algorithm": "RSA-PSS-SHA256",
+        "release_checks_applicable": True,
+        "message": message,
+    }
+
+
+def _crypto_not_applicable_result(*, file_name: str, message: str) -> dict[str, Any]:
+    return {
+        "file_name": file_name,
+        "current_sha256": None,
+        "stored_sha256": None,
+        "hash_match": None,
+        "signature_status": NOT_APPLICABLE,
+        "manifest_signature_status": NOT_APPLICABLE,
+        "integrity_status": NOT_APPLICABLE,
+        "release_status": NOT_APPLICABLE,
+        "algorithm": NOT_APPLICABLE,
+        "signed_payload": NOT_APPLICABLE,
+        "manifest_sha256": None,
+        "manifest_verification_status": NOT_APPLICABLE,
+        "signature_covers_current_release": None,
+        "release_checks_applicable": False,
         "message": message,
     }
 
 
 def _crypto_penalty(crypto_result: dict[str, Any]) -> int:
     penalty = 0
-    if crypto_result.get("hash_match") is not True:
+    if _hash_check_failed(crypto_result):
         penalty += HASH_MISMATCH_PENALTY
-    if crypto_result.get("signature_status") != "Valid":
+    if _signature_check_failed(crypto_result):
         penalty += INVALID_SIGNATURE_PENALTY
     if crypto_result.get("repository_integrity_match") is False:
         penalty += MERKLE_MISMATCH_PENALTY
     return penalty
+
+
+def _hash_check_failed(crypto_result: dict[str, Any]) -> bool:
+    return crypto_result.get("hash_match") is False
+
+
+def _signature_check_failed(crypto_result: dict[str, Any]) -> bool:
+    return str(crypto_result.get("signature_status", "")).strip() in {"Invalid", "Error"}
+
+
+def _hash_status(crypto_result: dict[str, Any]) -> str:
+    if crypto_result.get("hash_match") is True:
+        return "Passed"
+    if crypto_result.get("hash_match") is False:
+        return "Failed"
+    return NOT_APPLICABLE
+
+
+def _repository_integrity_status(repository_integrity: dict[str, Any]) -> str:
+    if repository_integrity.get("root_match") is True:
+        return "Passed"
+    if repository_integrity.get("root_match") is False:
+        return "Failed"
+    return NOT_APPLICABLE
+
+
+def _has_release_artifact(release_file: Path) -> bool:
+    return release_file.exists() and release_file.is_file()
+
+
+def _has_trusted_repository_reference(repo_path: Path) -> bool:
+    trusted_paths = [DEMO_REPOS["secure-demo-repo"], DEMO_REPOS["vulnerable-demo-repo"], ATTACK_WORKSPACE]
+    return any(_same_path(repo_path, trusted_path) for trusted_path in trusted_paths)
+
+
+def _same_path(left: Path, right: Path) -> bool:
+    try:
+        return left.resolve().samefile(right.resolve())
+    except OSError:
+        return str(left.resolve()).casefold() == str(right.resolve()).casefold()
+
+
+def _repository_integrity_not_applicable() -> dict[str, Any]:
+    return {
+        "files": [],
+        "current_root": None,
+        "expected_root": None,
+        "root_match": None,
+        "changed_files": [],
+        "status": NOT_APPLICABLE,
+        "applicable": False,
+        "explanation": (
+            "No trusted repository integrity reference was found; repository integrity verification is not applicable."
+        ),
+    }
 
 
 def _highest_penalty(findings: list[dict], field_name: str, penalties: dict[str, int]) -> int:
@@ -2195,19 +2269,19 @@ def _security_pipeline_section(payload: dict[str, Any], audit_log: dict[str, Any
         (
             "SHA-256",
             _display_value(summary["hash_status"]),
-            "green" if summary["hash_status"] == "Passed" else "red",
+            _check_status_class(summary["hash_status"]),
             "A one-way digest is recomputed from the current release file and compared with the manifest.",
         ),
         (
             "Merkle Root",
-            "Matched" if repository_integrity["root_match"] else "Mismatch",
-            "green" if repository_integrity["root_match"] else "red",
+            _repository_integrity_pipeline_value(repository_integrity),
+            _check_status_class(summary["merkle_status"]),
             "Leaf hashes are combined into one root so any tracked file change changes the repository fingerprint.",
         ),
         (
             "Manifest",
-            f"v{manifest.get('version', 'N/A')}",
-            "green" if crypto.get("hash_match") else "red",
+            f"v{manifest.get('version', 'N/A')}" if manifest else _display_value(NOT_APPLICABLE),
+            _check_status_class(summary["hash_status"]),
             "The manifest stores file name, version, SHA-256, timestamp, and the signed release state.",
         ),
         (
@@ -2245,6 +2319,20 @@ def _security_pipeline_section(payload: dict[str, Any], audit_log: dict[str, Any
 
 
 def _repository_integrity_panel(repository_integrity: dict[str, Any]) -> str:
+    if repository_integrity.get("root_match") is None:
+        return (
+            '<section class="report-card merkle-card"><h2>Merkle Tree Repository Integrity</h2>'
+            + _key_value_table(
+                [
+                    ("Status", _display_value(NOT_APPLICABLE)),
+                    ("Expected Merkle Root", "N/A"),
+                    ("Current Merkle Root", "N/A"),
+                ]
+            )
+            + _module_note(str(repository_integrity.get("explanation", "")))
+            + "</section>"
+        )
+
     rows = []
     for entry in repository_integrity.get("files", []):
         row_class = "changed-row" if entry.get("changed") else ""
@@ -2343,6 +2431,7 @@ def _audit_log_panel(audit_log: dict[str, Any] | None) -> str:
 
 def _display_value(value: object) -> str:
     translations = {
+        None: "N/A",
         True: "Evet",
         False: "Hayır",
         "APPROVED": "ONAYLI",
@@ -2353,6 +2442,9 @@ def _display_value(value: object) -> str:
         "Invalid": "Geçersiz",
         "Missing": "Eksik",
         "Error": "Hata",
+        NOT_APPLICABLE: "Uygulanamaz",
+        "No Release": "Yayın yok",
+        "NOT_APPLICABLE": "Uygulanamaz",
         "Verified": "Doğrulandı",
         "Hash Mismatch": "Hash Uyuşmazlığı",
         "SIGNED": "İmzalandı",
@@ -2376,13 +2468,13 @@ def _attack_state_panel(title: str, payload: dict[str, Any]) -> str:
         ("Güvenlik Puanı", _badge(f"{payload['security_score']}/100", _score_class(payload["security_score"]))),
         (
             "SHA-256",
-            _badge(_display_value(summary["hash_status"]), "green" if summary["hash_status"] == "Passed" else "red"),
+            _badge(_display_value(summary["hash_status"]), _check_status_class(summary["hash_status"])),
         ),
         (
             "Merkle Root",
             _badge(
                 _display_value(summary.get("merkle_status", "Passed")),
-                "green" if summary.get("merkle_status") == "Passed" else "red",
+                _check_status_class(summary.get("merkle_status")),
             ),
         ),
         ("Dijital İmza", _badge(_display_value(signature_status), _signature_class(signature_status))),
@@ -2584,9 +2676,27 @@ def _count_class(count: int) -> str:
 def _signature_class(status: object) -> str:
     if status == "Valid":
         return "green"
+    if status in {NOT_APPLICABLE, "No Release", "N/A"}:
+        return "green"
     if status in {"Missing", "Error"}:
         return "yellow"
     return "red"
+
+
+def _check_status_class(status: object) -> str:
+    if status in {"Passed", "Valid", "Verified", NOT_APPLICABLE, "No Release", "N/A"}:
+        return "green"
+    if status in {"Missing"}:
+        return "yellow"
+    return "red"
+
+
+def _repository_integrity_pipeline_value(repository_integrity: dict[str, Any]) -> str:
+    if repository_integrity.get("root_match") is True:
+        return "Matched"
+    if repository_integrity.get("root_match") is False:
+        return "Mismatch"
+    return _display_value(NOT_APPLICABLE)
 
 
 def _risk_class(severity: object) -> str:

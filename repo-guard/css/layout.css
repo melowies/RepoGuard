@@ -364,7 +364,7 @@
 
 .score-panel {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: minmax(150px, 1fr) minmax(190px, 330px);
   align-items: center;
   gap: clamp(13px, 2.4vw, 28px);
   min-height: clamp(98px, 13.6vh, 126px);
@@ -382,6 +382,8 @@
   display: grid;
   gap: clamp(7px, 1vh, 10px);
   justify-items: center;
+  justify-self: end;
+  max-width: min(100%, 330px);
   min-width: 0;
   text-align: center;
 }

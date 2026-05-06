@@ -883,7 +883,7 @@ async function scanRepository(repoAddress) {
   if (!response.ok) {
     throw new Error(data?.error || `Tarama HTTP ${response.status} ile başarısız oldu.`);
   }
-  return data?.payload || data;
+  return normalizeBackendPayload(data?.payload || data);
 }
 
 async function fetchWithTimeout(url, options = {}, timeoutMs = 120000) {
@@ -912,13 +912,131 @@ async function readJsonResponse(response) {
   }
 }
 
+function normalizeBackendPayload(payload) {
+  if (!payload || typeof payload !== "object") {
+    return payload;
+  }
+
+  const normalized = structuredCloneSafe(payload);
+  if (hasNoReleaseArtifact(normalized)) {
+    markReleaseChecksNotApplicable(normalized);
+  }
+  if (shouldIgnoreRepositoryIntegrity(normalized)) {
+    markRepositoryIntegrityNotApplicable(normalized);
+  }
+  recalculateNeutralizedScore(normalized);
+  return normalized;
+}
+
+function structuredCloneSafe(value) {
+  if (typeof structuredClone === "function") {
+    return structuredClone(value);
+  }
+  return JSON.parse(JSON.stringify(value));
+}
+
+function hasNoReleaseArtifact(payload) {
+  const crypto = payload?.findings?.crypto || {};
+  const summary = payload?.summary || {};
+  const message = String(crypto.message || "");
+  return (
+    crypto.release_checks_applicable === false ||
+    isNotApplicableStatus(summary.hash_status) ||
+    /^Missing release file:/i.test(message) ||
+    /^Beklenen yayın dosyası eksik:/i.test(message) ||
+    (crypto.hash_match === false && !crypto.current_sha256 && !crypto.stored_sha256)
+  );
+}
+
+function markReleaseChecksNotApplicable(payload) {
+  payload.findings = payload.findings || {};
+  payload.summary = payload.summary || {};
+  const crypto = payload.findings.crypto || {};
+  payload.findings.crypto = crypto;
+
+  crypto.hash_match = null;
+  crypto.current_sha256 = null;
+  crypto.stored_sha256 = null;
+  crypto.manifest_sha256 = null;
+  crypto.signature_covers_current_release = null;
+  crypto.signature_status = "Not Applicable";
+  crypto.manifest_signature_status = "Not Applicable";
+  crypto.integrity_status = "Not Applicable";
+  crypto.manifest_verification_status = "Not Applicable";
+  crypto.release_checks_applicable = false;
+  crypto.message = "No release artifacts were found; release verification is not applicable.";
+
+  payload.summary.hash_status = "Not Applicable";
+  payload.summary.signature_status = "Not Applicable";
+}
+
+function shouldIgnoreRepositoryIntegrity(payload) {
+  const integrity = payload?.findings?.repository_integrity || {};
+  const repoSource = String(payload?.repo_source || "").toLowerCase();
+  const isDemoBaseline = ["secure-demo-repo", "vulnerable-demo-repo"].some((name) => repoSource.includes(name));
+  return hasNoReleaseArtifact(payload) && integrity.root_match === false && !isDemoBaseline;
+}
+
+function markRepositoryIntegrityNotApplicable(payload) {
+  payload.findings = payload.findings || {};
+  payload.summary = payload.summary || {};
+  payload.findings.repository_integrity = {
+    files: [],
+    current_root: null,
+    expected_root: null,
+    root_match: null,
+    changed_files: [],
+    status: "Not Applicable",
+    applicable: false,
+    explanation: "No trusted repository integrity reference was found; repository integrity verification is not applicable.",
+  };
+  const crypto = payload.findings.crypto || {};
+  payload.findings.crypto = crypto;
+  crypto.repository_integrity_match = null;
+  crypto.repository_merkle_root = null;
+  crypto.expected_repository_merkle_root = null;
+  payload.summary.merkle_status = "Not Applicable";
+}
+
+function recalculateNeutralizedScore(payload) {
+  const scoreBreakdown = payload?.score_breakdown || {};
+  const releaseNeutral = hasNoReleaseArtifact(payload);
+  const integrityNeutral = payload?.findings?.repository_integrity?.root_match === null;
+  if (!releaseNeutral && !integrityNeutral) {
+    return;
+  }
+
+  const strictPenalties = (scoreBreakdown.strict_penalties || []).filter((penalty) => {
+    const area = String(penalty.area || "").toLowerCase();
+    return !((releaseNeutral && area === "crypto") || (integrityNeutral && area === "repository"));
+  });
+  const strictTotalPenalty = strictPenalties.reduce((total, penalty) => total + (Number(penalty.penalty) || 0), 0);
+  const cryptoPenalty = releaseNeutral ? 0 : Number(scoreBreakdown.crypto_penalty || 0);
+  const sourcePenalty = Number(scoreBreakdown.source_penalty || 0);
+  const oldTotal = Number(scoreBreakdown.total_penalty ?? 100 - normalizeScore(payload.security_score));
+  const oldCrypto = Number(scoreBreakdown.crypto_penalty || 0);
+  const newTotal = releaseNeutral || integrityNeutral ? sourcePenalty + cryptoPenalty : Math.max(0, oldTotal - oldCrypto + cryptoPenalty);
+
+  scoreBreakdown.crypto_penalty = cryptoPenalty;
+  scoreBreakdown.combined_source_and_crypto_penalty = sourcePenalty && cryptoPenalty ? scoreBreakdown.combined_source_and_crypto_penalty || 0 : 0;
+  scoreBreakdown.total_penalty = newTotal;
+  scoreBreakdown.strict_penalties = strictPenalties;
+  scoreBreakdown.strict_total_penalty = strictTotalPenalty;
+  scoreBreakdown.strict_security_score = Math.max(0, 100 - strictTotalPenalty);
+  payload.security_score = Math.max(normalizeScore(payload.security_score), Math.min(100, 100 - newTotal));
+  payload.release_status = payload.security_score >= 80 ? "APPROVED" : payload.release_status;
+  if (payload.findings?.crypto) {
+    payload.findings.crypto.release_status = payload.release_status;
+  }
+}
+
 function mapBackendReportToResult(payload) {
   const score = normalizeScore(payload?.security_score);
   const crypto = payload?.findings?.crypto || {};
   const releaseStatus = String(payload?.release_status || crypto.release_status || "").toUpperCase();
   const cryptoFailed =
     crypto.hash_match === false ||
-    (crypto.signature_status && crypto.signature_status !== "Valid") ||
+    isFailureStatus(crypto.signature_status) ||
     crypto.repository_integrity_match === false;
   const tone = cryptoFailed ? "danger" : getScoreBand(score).tone;
   const repoAddress = payload?.repo_source || defaultLoadingUrl;
@@ -956,9 +1074,50 @@ function translateReleaseStatus(value) {
   return String(value || "BİLİNMİYOR");
 }
 
+function normalizeStatusText(value) {
+  return String(value || "").trim().toLowerCase().replace(/[_-]+/g, " ");
+}
+
+function isNotApplicableStatus(value) {
+  const normalized = normalizeStatusText(value);
+  return normalized === "not applicable" || normalized === "n/a" || normalized === "no release";
+}
+
+function isFailureStatus(value) {
+  const normalized = normalizeStatusText(value);
+  return normalized === "failed" || normalized === "invalid" || normalized === "error" || normalized.includes("mismatch");
+}
+
+function checkStatusTone(passed, status) {
+  if (passed || isNotApplicableStatus(status)) {
+    return "safe";
+  }
+  if (normalizeStatusText(status) === "missing") {
+    return "controlled";
+  }
+  return "danger";
+}
+
+function checkStatusMarker(passed, status) {
+  if (passed) {
+    return "check";
+  }
+  if (isNotApplicableStatus(status) || normalizeStatusText(status) === "missing") {
+    return "alert";
+  }
+  return "x";
+}
+
+function formatCheckStatus(passed, status) {
+  if (passed) {
+    return translateStatus("Passed");
+  }
+  return translateStatus(status || "Failed");
+}
+
 function translateStatus(value) {
   const text = String(value || "");
-  const normalized = text.toLowerCase();
+  const normalized = normalizeStatusText(text);
   if (normalized === "passed" || normalized === "valid" || normalized === "verified") {
     return "Geçti";
   }
@@ -970,6 +1129,12 @@ function translateStatus(value) {
   }
   if (normalized === "missing") {
     return "Eksik";
+  }
+  if (normalized === "not applicable") {
+    return "Uygulanamaz";
+  }
+  if (normalized === "no release") {
+    return "Yayın yok";
   }
   if (normalized === "hash mismatch") {
     return "Parmak izi uyuşmazlığı";
@@ -1020,6 +1185,14 @@ function translateBackendText(value) {
       "Manifest imzası geçerli ve imzalanan SHA-256 mevcut yayın dosyasıyla eşleşiyor.",
     "The manifest signature does not verify with the trusted public key.":
       "Manifest imzası güvenilen açık anahtar ile doğrulanamıyor.",
+    "No release artifacts were found; release verification is not applicable.":
+      "Yayın yok; yayın doğrulaması uygulanamaz.",
+    "No signature file was found; signature verification is not applicable.":
+      "İmza dosyası yok; imza doğrulaması uygulanamaz.",
+    "The current release file does not match the stored SHA-256; signature verification is not applicable because no signature file was found.":
+      "Mevcut yayın dosyası kayıtlı SHA-256 ile eşleşmiyor; imza dosyası olmadığı için imza doğrulaması uygulanamaz.",
+    "No trusted repository integrity reference was found; repository integrity verification is not applicable.":
+      "Güvenilir repo bütünlüğü referansı yok; repo bütünlüğü doğrulaması uygulanamaz.",
     "Every virtual repository file matched the trusted baseline, so the Merkle Root is stable.":
       "Tüm sanal repo dosyaları güvenilen referansla eşleşti; repo bütünlük referansı stabil.",
     "At least one file hash changed, so the Merkle Root no longer matches the trusted baseline.":
@@ -1045,6 +1218,13 @@ function translateBackendText(value) {
     return `Politika kararı: ${translateReleaseStatus(policyMatch[1])}, skor ${policyMatch[2]}.`;
   }
 
+  const broadPermissionMatch = text.match(
+    /^The workflow grants write access for ([^,]+), increasing the impact of a compromised workflow run\.$/
+  );
+  if (broadPermissionMatch) {
+    return `Workflow, ${broadPermissionMatch[1]} için yazma erişimi veriyor; bu da workflow ele geçirildiğinde oluşabilecek etkiyi artırır.`;
+  }
+
   const replacements = [
     ["Regex matched api key naming patterns", "API key adlandırma deseni eşleşti"],
     ["Regex matched password naming patterns", "Parola adlandırma deseni eşleşti"],
@@ -1058,6 +1238,7 @@ function translateBackendText(value) {
     ["Use pull_request for untrusted code, or carefully isolate checkout, scripts, and secrets when pull_request_target is required.", "Güvenilmeyen kod için pull_request kullan; pull_request_target gerekiyorsa kod çekme, komut dosyası ve gizli bilgi erişimini dikkatle izole et."],
     ["The workflow has excessive repository permissions. If compromised, it may modify repository contents or releases.", "Otomasyon aşırı repo iznine sahip. Ele geçirilirse repo içeriğini veya yayınları değiştirebilir."],
     ["Use least privilege permissions, for example permissions: contents: read.", "En düşük yetki izinleri kullan; örneğin permissions: contents: read."],
+    ["Grant only the permissions each job needs, and prefer read-only access unless write access is required.", "Her job'a yalnızca ihtiyaç duyduğu izinleri ver ve yazma erişimi gerekmedikçe salt okunur izinleri tercih et."],
     ["Deployment, release, or publishing jobs can affect production artifacts; broad permissions make compromise more damaging.", "Dağıtım, yayın veya paketleme işleri üretim çıktısını etkileyebilir; geniş izinler ele geçirilme etkisini büyütür."],
     ["Move deploy and release jobs to the smallest possible permission set and require environment approvals for sensitive deployments.", "Dağıtım ve yayın işlerini mümkün olan en dar izin setine taşı ve hassas dağıtımlar için ortam onayı zorunlu kıl."],
     ["A hardcoded secret in a workflow can be exposed to logs, pull requests, or compromised jobs.", "Otomasyon içindeki kod içine yazılmış gizli değer loglara, katkı isteklerine veya ele geçirilmiş işlere sızabilir."],
@@ -1083,6 +1264,9 @@ function buildStatusSubtitle(payload) {
 function buildResultMessage(payload) {
   const allFindings = buildAllFindings(payload);
   if (String(payload?.release_status || "").toUpperCase() === "APPROVED" && allFindings.length === 0) {
+    if (releaseChecksNotApplicable(payload)) {
+      return "Tarama temiz: gizli bilgi, bağımlılık ve otomasyon bulgusu yok. Yayın kanıtı bulunmadığı için yayın doğrulaması uygulanamaz.";
+    }
     return "Tüm tarama kontrolleri geçti: gizli bilgi, bağımlılık, otomasyon, dosya parmak izi, imza, manifest ve repo bütünlüğü.";
   }
   const top = allFindings.find((finding) => severityRank(finding.severity) >= 3);
@@ -1090,6 +1274,14 @@ function buildResultMessage(payload) {
     return `RepoGuard ${top.category} alanında yayın riski buldu: ${top.title}. Düzeltme adımları için ayrıntılı raporu aç.`;
   }
   return "RepoGuard inceleme gerektiren bulgular buldu. Açıklama, kanıt ve aksiyonlar için ayrıntılı raporu aç.";
+}
+
+function releaseChecksNotApplicable(payload) {
+  const crypto = payload?.findings?.crypto || {};
+  return (
+    crypto.release_checks_applicable === false ||
+    (isNotApplicableStatus(payload?.summary?.hash_status) && isNotApplicableStatus(crypto.signature_status))
+  );
 }
 
 function buildOverviewChecks(payload) {
@@ -1131,10 +1323,10 @@ function countCheck(label, count, severity, icon) {
 function statusCheck(label, passed, status, icon) {
   return {
     label,
-    status: translateStatus(status || (passed ? "Passed" : "Failed")),
+    status: formatCheckStatus(passed, status || (passed ? "Passed" : "Failed")),
     icon,
-    tone: passed ? "safe" : "danger",
-    marker: passed ? "check" : "x",
+    tone: checkStatusTone(passed, status),
+    marker: checkStatusMarker(passed, status),
   };
 }
 
@@ -1386,7 +1578,7 @@ function buildAllFindings(payload) {
     });
   }
 
-  if (crypto.signature_status && crypto.signature_status !== "Valid") {
+  if (isFailureStatus(crypto.signature_status)) {
     allFindings.push({
       kind: "signature",
       category: "İmza",
@@ -1409,7 +1601,7 @@ function buildAllFindings(payload) {
     });
   }
 
-  if (crypto.manifest_signature_status && crypto.manifest_signature_status !== "Valid") {
+  if (isFailureStatus(crypto.manifest_signature_status)) {
     allFindings.push({
       kind: "manifest",
       category: "Manifest",
@@ -1695,7 +1887,7 @@ function renderFeaturePanels(payload) {
   reportExtraPanels.replaceChildren(
     detailCard("Teknik yayın kanıtları", translateBackendText(crypto.message) || "Yayın doğrulaması tamamlandı.", [
       ["Yayın dosyası", toRepoDisplayPath(crypto.file_name) || "N/A"],
-      ["Dosya parmak izi eşleşmesi", crypto.hash_match === true ? "Geçti" : "Başarısız"],
+      ["Dosya parmak izi eşleşmesi", formatCheckStatus(crypto.hash_match === true, crypto.hash_match === false ? "Failed" : "Not Applicable")],
       ["İmza", translateStatus(crypto.signature_status || "N/A")],
       ["Manifest imzası", translateStatus(crypto.manifest_signature_status || "N/A")],
       ["İmzalanan veri", crypto.signed_payload || "N/A"],
@@ -1704,7 +1896,7 @@ function renderFeaturePanels(payload) {
       ["Kayıtlı SHA-256", shortHash(crypto.stored_sha256, 16)],
     ]),
     detailCard("Teknik repo bütünlüğü", translateBackendText(integrity.explanation) || "Repo bütünlüğü kontrolü tamamlandı.", [
-      ["Bütünlük durumu", integrity.root_match ? "Geçti" : "Başarısız"],
+      ["Bütünlük durumu", formatCheckStatus(integrity.root_match === true, integrity.root_match === false ? "Failed" : "Not Applicable")],
       ["Mevcut kök", shortHash(integrity.current_root, 16)],
       ["Beklenen kök", shortHash(integrity.expected_root, 16)],
       ["Değişen dosyalar", (integrity.changed_files || []).map(toRepoDisplayPath).join(", ") || "Yok"],
