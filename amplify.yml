@@ -6,7 +6,7 @@ applications:
         build:
           commands:
             - echo "Preparing static RepoGuard AWS deployment"
-            - "sed -i 's#</body>#  <script src=\"js/deploy-english.js\"></script>\\n</body>#' index.html"
+            - "sed -i 's#</body>#  <script src=\"js/deploy-english.js\"></script>\\n  <script src=\"js/deploy-fixes.js\"></script>\\n</body>#' index.html"
       artifacts:
         baseDirectory: .
         files:
