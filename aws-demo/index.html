@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="RepoGuard AWS Amplify demo — interactive repository security dashboard." />
+  <title>RepoGuard — AWS Demo</title>
+  <style>
+    :root {
+      --bg:#fff6fa; --panel:#ffffff; --panel-soft:#fff0f6; --ink:#302833; --muted:#7b6b75;
+      --line:#ecd6df; --accent:#7c5cff; --accent-soft:#f0edff; --safe:#2f7a55; --safe-bg:#edf8f2;
+      --warn:#9a6b17; --warn-bg:#fff6df; --danger:#b44966; --danger-bg:#fff0f4;
+      --shadow:0 18px 45px rgba(87,54,70,.10); --shadow-soft:0 8px 24px rgba(87,54,70,.07);
+    }
+    *{box-sizing:border-box}
+    body{margin:0;min-height:100vh;background:linear-gradient(180deg,#fffafd 0%,var(--bg) 55%,#fff 100%);color:var(--ink);font-family:Inter,Aptos,"Segoe UI",Arial,sans-serif}
+    button{font:inherit}
+    .shell{max-width:1220px;margin:0 auto;padding:28px 22px 44px}
+    .topbar{display:flex;justify-content:space-between;align-items:center;gap:18px;margin-bottom:18px}
+    .brand{display:flex;align-items:center;gap:12px}
+    .logo{width:44px;height:44px;border-radius:14px;display:grid;place-items:center;background:linear-gradient(135deg,#7c5cff,#c26da8);color:#fff;font-weight:900;box-shadow:var(--shadow-soft)}
+    h1{font-size:30px;line-height:1.05;margin:0}.sub{color:var(--muted);margin-top:4px;font-size:14px}
+    .aws-pill{display:inline-flex;align-items:center;gap:8px;padding:9px 12px;border:1px solid var(--line);border-radius:999px;background:#fff;font-weight:700;font-size:13px;box-shadow:var(--shadow-soft)}
+    .hero{display:grid;grid-template-columns:1.15fr .85fr;gap:16px;margin-bottom:16px}
+    .panel{background:rgba(255,255,255,.92);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow);padding:20px}
+    .kicker{font-size:12px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);font-weight:800;margin-bottom:8px}
+    .hero h2{font-size:28px;margin:0 0 10px}.hero p{color:var(--muted);line-height:1.6;margin:0 0 16px}
+    .controls{display:flex;flex-wrap:wrap;gap:10px}
+    .btn{border:1px solid var(--line);background:#fff;padding:10px 14px;border-radius:12px;font-weight:800;cursor:pointer;transition:.18s ease;box-shadow:var(--shadow-soft)}
+    .btn:hover{transform:translateY(-1px)}.btn.active{background:var(--accent);border-color:var(--accent);color:#fff}
+    .status-card{height:100%;display:flex;flex-direction:column;justify-content:space-between;background:linear-gradient(145deg,#fff,#fff3f8)}
+    .score-wrap{display:flex;align-items:center;gap:18px}.score-ring{width:112px;height:112px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(var(--accent) 0deg 295deg,#eee 295deg 360deg);position:relative}
+    .score-ring:after{content:"";position:absolute;width:82px;height:82px;border-radius:50%;background:#fff}.score{position:relative;z-index:1;font-size:29px;font-weight:900}.score small{font-size:12px;color:var(--muted)}
+    .status-title{font-size:24px;font-weight:900;margin-bottom:5px}.status-copy{color:var(--muted);line-height:1.45}
+    .badge{display:inline-flex;align-items:center;width:max-content;border-radius:999px;padding:7px 10px;font-size:12px;font-weight:900;margin-top:14px}
+    .cards{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}.metric{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px;box-shadow:var(--shadow-soft)}
+    .metric-label{color:var(--muted);font-size:12px;font-weight:700}.metric-value{font-size:24px;font-weight:900;margin-top:7px}.metric-note{font-size:12px;color:var(--muted);margin-top:5px}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.list{display:grid;gap:10px}.finding{border:1px solid var(--line);border-radius:14px;padding:13px 14px;background:#fff;display:grid;grid-template-columns:1fr auto;gap:12px;align-items:start}
+    .finding strong{display:block;margin-bottom:4px}.finding p{margin:0;color:var(--muted);font-size:13px;line-height:1.45}.tag{font-size:11px;font-weight:900;padding:5px 8px;border-radius:999px;white-space:nowrap}
+    .pipeline{display:grid;grid-template-columns:repeat(5,1fr);gap:9px;margin-top:12px}.step{padding:12px;border:1px solid var(--line);border-radius:14px;background:#fff}.step-n{font-size:11px;color:var(--muted);font-weight:900}.step-v{font-size:13px;font-weight:900;margin-top:5px}.step p{font-size:11px;color:var(--muted);line-height:1.4;margin:5px 0 0}
+    .footer{display:flex;justify-content:space-between;gap:15px;align-items:center;margin-top:18px;color:var(--muted);font-size:12px}.footer a{color:var(--accent);font-weight:800;text-decoration:none}
+    .safe{color:var(--safe);background:var(--safe-bg)}.warn{color:var(--warn);background:var(--warn-bg)}.danger{color:var(--danger);background:var(--danger-bg)}
+    @media(max-width:900px){.hero,.grid{grid-template-columns:1fr}.cards{grid-template-columns:repeat(2,1fr)}.pipeline{grid-template-columns:1fr 1fr}.topbar{align-items:flex-start}}
+    @media(max-width:560px){.shell{padding:18px 14px 30px}.topbar{flex-direction:column}.cards,.pipeline{grid-template-columns:1fr}.score-wrap{align-items:flex-start}.hero h2{font-size:24px}}
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <div class="topbar">
+      <div class="brand"><div class="logo">RG</div><div><h1>RepoGuard</h1><div class="sub">Repository security dashboard · AWS deployment demo</div></div></div>
+      <div class="aws-pill">☁ Hosted on AWS Amplify</div>
+    </div>
+
+    <section class="hero">
+      <div class="panel">
+        <div class="kicker">Interactive demo</div>
+        <h2>See how RepoGuard turns security signals into a release decision.</h2>
+        <p>This lightweight AWS-hosted demo uses two built-in repository scenarios. Switch profiles to see how secret exposure, dependency risk, CI/CD configuration and integrity checks affect the final security score.</p>
+        <div class="controls">
+          <button class="btn active" id="secureBtn" type="button">✓ Secure demo</button>
+          <button class="btn" id="vulnerableBtn" type="button">⚠ Vulnerable demo</button>
+        </div>
+      </div>
+      <div class="panel status-card">
+        <div class="score-wrap">
+          <div class="score-ring" id="scoreRing"><div class="score"><span id="score">92</span><small>/100</small></div></div>
+          <div><div class="kicker">Release decision</div><div class="status-title" id="statusTitle">READY TO RELEASE</div><div class="status-copy" id="statusCopy">All demo checks are healthy and the repository can move forward in the release pipeline.</div><div class="badge safe" id="statusBadge">LOW RISK</div></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="cards">
+      <div class="metric"><div class="metric-label">Secrets found</div><div class="metric-value" id="secrets">0</div><div class="metric-note">Exposed credentials or key-like patterns</div></div>
+      <div class="metric"><div class="metric-label">Dependency risks</div><div class="metric-value" id="dependencies">0</div><div class="metric-note">Known risky or outdated package versions</div></div>
+      <div class="metric"><div class="metric-label">CI/CD risks</div><div class="metric-value" id="cicd">0</div><div class="metric-note">Workflow permissions and unsafe patterns</div></div>
+      <div class="metric"><div class="metric-label">Integrity</div><div class="metric-value" id="integrity">Verified</div><div class="metric-note">Hash, manifest and signature signals</div></div>
+    </section>
+
+    <section class="grid">
+      <div class="panel">
+        <div class="kicker">Findings</div>
+        <h2 style="font-size:20px;margin:0 0 12px">Security checks</h2>
+        <div class="list" id="findings"></div>
+      </div>
+      <div class="panel">
+        <div class="kicker">Architecture</div>
+        <h2 style="font-size:20px;margin:0">Release verification pipeline</h2>
+        <div class="pipeline">
+          <div class="step"><div class="step-n">01</div><div class="step-v">Repository</div><p>Files and manifests enter the scan.</p></div>
+          <div class="step"><div class="step-n">02</div><div class="step-v">Secrets</div><p>Credential-like patterns are checked.</p></div>
+          <div class="step"><div class="step-n">03</div><div class="step-v">Dependencies</div><p>Package versions are reviewed for risk.</p></div>
+          <div class="step"><div class="step-n">04</div><div class="step-v">CI/CD</div><p>Workflow permissions and commands are analyzed.</p></div>
+          <div class="step"><div class="step-n">05</div><div class="step-v">Decision</div><p>Signals combine into a release score.</p></div>
+        </div>
+        <p style="margin:16px 0 0;color:var(--muted);font-size:13px;line-height:1.55">The full RepoGuard project also includes a Python scanning backend and cryptographic release verification. This AWS Amplify version is a standalone interactive showcase designed to run without a server or database.</p>
+      </div>
+    </section>
+
+    <div class="footer"><span>Weekend Deployment Challenge · RepoGuard</span><a href="https://github.com/melowies/RepoGuard" target="_blank" rel="noopener">View source on GitHub ↗</a></div>
+  </main>
+
+  <script>
+    const profiles = {
+      secure: {
+        score:92, title:'READY TO RELEASE', copy:'All demo checks are healthy and the repository can move forward in the release pipeline.', badge:'LOW RISK', badgeClass:'safe', ring:'#2f7a55', degrees:331,
+        secrets:0, dependencies:0, cicd:0, integrity:'Verified',
+        findings:[
+          ['Secret scanning','No exposed secrets detected in the demo repository.','PASS','safe'],
+          ['Dependencies','Package versions pass the demo risk checks.','PASS','safe'],
+          ['CI/CD policy','Workflow permissions are scoped and no unsafe pattern is triggered.','PASS','safe'],
+          ['Release integrity','Manifest, SHA-256 and signature signals are consistent.','PASS','safe']
+        ]
+      },
+      vulnerable: {
+        score:17, title:'RELEASE BLOCKED', copy:'Multiple high-risk signals were detected. Fix the findings before allowing this repository into the release pipeline.', badge:'HIGH RISK', badgeClass:'danger', ring:'#b44966', degrees:61,
+        secrets:4, dependencies:4, cicd:6, integrity:'Failed',
+        findings:[
+          ['Secret scanning','Token-like values and private key material appear in tracked files.','CRITICAL','danger'],
+          ['Dependencies','Several package versions match known risky demo entries.','HIGH','danger'],
+          ['CI/CD policy','Overly broad workflow permissions and unsafe automation patterns are present.','HIGH','danger'],
+          ['Release integrity','The current artifact does not match the expected release integrity signals.','FAILED','danger']
+        ]
+      }
+    };
+
+    const $ = id => document.getElementById(id);
+    function render(name){
+      const p=profiles[name];
+      $('score').textContent=p.score; $('statusTitle').textContent=p.title; $('statusCopy').textContent=p.copy;
+      $('secrets').textContent=p.secrets; $('dependencies').textContent=p.dependencies; $('cicd').textContent=p.cicd; $('integrity').textContent=p.integrity;
+      $('scoreRing').style.background=`conic-gradient(${p.ring} 0deg ${p.degrees}deg,#eee ${p.degrees}deg 360deg)`;
+      $('statusBadge').textContent=p.badge; $('statusBadge').className=`badge ${p.badgeClass}`;
+      $('findings').innerHTML=p.findings.map(f=>`<div class="finding"><div><strong>${f[0]}</strong><p>${f[1]}</p></div><span class="tag ${f[3]}">${f[2]}</span></div>`).join('');
+      $('secureBtn').classList.toggle('active',name==='secure'); $('vulnerableBtn').classList.toggle('active',name==='vulnerable');
+    }
+    $('secureBtn').addEventListener('click',()=>render('secure'));
+    $('vulnerableBtn').addEventListener('click',()=>render('vulnerable'));
+    render('secure');
+  </script>
+</body>
+</html>
