@@ -94,5 +94,5 @@ export function showResult(scoreState) {
 export function setBusy(isBusy) {
   const analyzeButton = document.querySelector("#analyzeButton");
   analyzeButton.disabled = isBusy;
-  analyzeButton.textContent = isBusy ? "Analiz Ediliyor" : "Analiz Et";
+  analyzeButton.textContent = isBusy ? "Analyzing" : "Analyze";
 }
