@@ -5,7 +5,8 @@ applications:
       phases:
         build:
           commands:
-            - echo "Static RepoGuard frontend - no build step required"
+            - echo "Preparing static RepoGuard AWS deployment"
+            - "sed -i 's#</body>#  <script src=\"js/deploy-english.js\"></script>\\n</body>#' index.html"
       artifacts:
         baseDirectory: .
         files:
