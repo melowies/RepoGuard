@@ -5,8 +5,8 @@ applications:
       phases:
         build:
           commands:
-            - echo "Preparing static RepoGuard AWS deployment"
-            - "sed -i 's#</body>#  <script src=\"js/deploy-english.js\"></script>\\n  <script src=\"js/deploy-fixes.js\"></script>\\n</body>#' index.html"
+            - echo "Preparing original RepoGuard UI for AWS Amplify"
+            - "sed -i 's#<script src=\"js/app.js\" defer></script>#<script src=\"js/app.js\" defer></script>\\n  <script src=\"js/aws-runtime.js\" defer></script>#' index.html"
       artifacts:
         baseDirectory: .
         files:
