@@ -1,0 +1,12 @@
+version: 1
+applications:
+  - appRoot: repo-guard
+    frontend:
+      phases:
+        build:
+          commands:
+            - echo "Static RepoGuard frontend - no build step required"
+      artifacts:
+        baseDirectory: .
+        files:
+          - "**/*"
