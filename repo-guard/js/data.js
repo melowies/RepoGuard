@@ -12,13 +12,13 @@ export const MASCOT_IMAGES = {
 };
 
 export const STATUS_LABELS = {
-  start: "Hazır",
-  loading: "Analiz ediliyor",
-  danger: "Kritik Risk",
-  caution: "Dikkat",
-  controlled: "Kontrollü",
-  curious: "Kontrollü",
-  safe: "Güvenli"
+  start: "Ready",
+  loading: "Analyzing",
+  danger: "Critical Risk",
+  caution: "Attention",
+  controlled: "Review",
+  curious: "Review",
+  safe: "Secure"
 };
 
 export const SCORE_RANGES = [
@@ -58,198 +58,198 @@ export const SCORE_RANGES = [
 
 export const MESSAGES = {
   start: {
-    title: "Analiz bekleniyor",
-    body: "RepoGuard, seçilen güvenlik puanını pastel alarm paneline dönüştürmeye hazır.",
-    mascotAlt: "RepoGuard analiz bekleyen tavşan maskotu"
+    title: "Waiting for analysis",
+    body: "RepoGuard is ready to turn the selected security score into a clear visual status.",
+    mascotAlt: "RepoGuard mascot waiting for analysis"
   },
   loading: {
-    title: "Repo taranıyor",
-    body: "Secret, bağımlılık, CI/CD ve bütünlük kontrolleri birlikte değerlendiriliyor.",
-    mascotAlt: "RepoGuard yükleme durumundaki tavşan maskotu"
+    title: "Scanning repository",
+    body: "Secrets, dependencies, CI/CD, and integrity checks are being evaluated together.",
+    mascotAlt: "RepoGuard mascot while the repository is being scanned"
   },
   danger: {
-    title: "Kritik Risk",
-    body: "Bu repo yayınlanmadan önce düzeltilmeli. Hash uyuşmazlığı, geçersiz imza, secret sızıntısı veya riskli CI/CD ayarları tespit edildi.",
-    mascotAlt: "Kırık kalkan tutan paniklemiş RepoGuard tavşanı"
+    title: "Critical Risk",
+    body: "This repository should be fixed before release. A hash mismatch, invalid signature, secret exposure, or risky CI/CD setting was detected.",
+    mascotAlt: "RepoGuard mascot showing a critical-risk state"
   },
   caution: {
-    title: "Dikkat",
-    body: "Bazı kontroller alarm üretiyor. Yayın öncesi bulgular gözden geçirilmeli.",
-    mascotAlt: "Kırık kalkanın yanında endişeli duran RepoGuard tavşan maskotu"
+    title: "Attention",
+    body: "Some checks raised warnings. Review the findings before release.",
+    mascotAlt: "RepoGuard mascot showing an attention state"
   },
   controlled: {
-    title: "Kontrollü",
-    body: "Genel durum fena değil. Yine de imza, secret ve CI/CD ayarlarını bir kez daha gözden geçirelim.",
-    mascotAlt: "Büyüteçle inceleme yapan düşünceli RepoGuard tavşan maskotu"
+    title: "Review Required",
+    body: "The overall state is manageable, but signature, secret, and CI/CD settings should still be reviewed.",
+    mascotAlt: "RepoGuard mascot showing a review state"
   },
   safe: {
-    title: "Güvenli",
-    body: "Kontroller temiz. Repo yayın hattı için sağlıklı ve sakin görünüyor.",
-    mascotAlt: "RepoGuard güvenli durum tavşan maskotu"
+    title: "Secure",
+    body: "The checks are clean. The repository looks healthy for the release pipeline.",
+    mascotAlt: "RepoGuard mascot showing a secure state"
   }
 };
 
 export const CHECK_RESULTS = {
   start: [
     {
-      title: "Secret taraması",
-      value: "Beklemede",
+      title: "Secret scanning",
+      value: "Pending",
       tone: "search",
-      detail: "Token ve anahtar izleri analiz sırasında listelenir."
+      detail: "Token and key patterns will be listed during analysis."
     },
     {
-      title: "Bağımlılıklar",
-      value: "Beklemede",
+      title: "Dependencies",
+      value: "Pending",
       tone: "search",
-      detail: "Riskli paket sürümleri seçilen skora göre özetlenir."
+      detail: "Risky package versions will be summarized for the selected score."
     },
     {
-      title: "CI/CD politikası",
-      value: "Beklemede",
+      title: "CI/CD policy",
+      value: "Pending",
       tone: "search",
-      detail: "Workflow izinleri ve tehlikeli komutlar kontrol edilir."
+      detail: "Workflow permissions and unsafe commands will be checked."
     },
     {
-      title: "Bütünlük",
-      value: "Beklemede",
+      title: "Integrity",
+      value: "Pending",
       tone: "search",
-      detail: "Hash, imza ve manifest sinyalleri birlikte izlenir."
+      detail: "Hash, signature, and manifest signals will be monitored together."
     }
   ],
   loading: [
     {
-      title: "Secret taraması",
-      value: "Taranıyor",
+      title: "Secret scanning",
+      value: "Scanning",
       tone: "loading",
-      detail: "Kaynak dosyalarda hassas veri kalıpları aranıyor."
+      detail: "Searching source files for sensitive-data patterns."
     },
     {
-      title: "Bağımlılıklar",
-      value: "Taranıyor",
+      title: "Dependencies",
+      value: "Scanning",
       tone: "loading",
-      detail: "Paket sürümleri bilinen risklerle karşılaştırılıyor."
+      detail: "Comparing package versions with known risks."
     },
     {
-      title: "CI/CD politikası",
-      value: "Taranıyor",
+      title: "CI/CD policy",
+      value: "Scanning",
       tone: "loading",
-      detail: "Pipeline ayarları yayın güvenliği için inceleniyor."
+      detail: "Reviewing pipeline settings for release safety."
     },
     {
-      title: "Bütünlük",
-      value: "Taranıyor",
+      title: "Integrity",
+      value: "Scanning",
       tone: "loading",
-      detail: "Manifest, SHA-256 ve imza durumu yenileniyor."
+      detail: "Refreshing manifest, SHA-256, and signature status."
     }
   ],
   danger: [
     {
       title: "SHA-256",
-      value: "Başarısız",
+      value: "Failed",
       tone: "danger",
-      detail: "Hash uyuşmazlığı yayın kararını bloke ediyor."
+      detail: "The hash mismatch blocks the release decision."
     },
     {
-      title: "Dijital İmza",
-      value: "Geçersiz",
+      title: "Digital Signature",
+      value: "Invalid",
       tone: "danger",
-      detail: "İmza doğrulaması geçerli güven sinyali üretmiyor."
+      detail: "Signature verification did not produce a valid trust signal."
     },
     {
-      title: "Secret Taraması",
-      value: "Kritik Secret Bulundu",
+      title: "Secret Scanning",
+      value: "Critical Secret Found",
       tone: "danger",
-      detail: "Sızıntı sinyali güçlü. Anahtarlar iptal edilip repo temizlenmeli."
+      detail: "The exposure signal is strong. Revoke the key and clean the repository."
     },
     {
       title: "CI/CD",
-      value: "Yüksek Risk",
+      value: "High Risk",
       tone: "danger",
-      detail: "Yazma izni veya güvensiz komutlar yayın hattını kırıyor."
+      detail: "Write permissions or unsafe commands make the release pipeline risky."
     },
     {
-      title: "Bağımlılıklar",
-      value: "Riskli Paket Bulundu",
+      title: "Dependencies",
+      value: "Risky Package Found",
       tone: "danger",
-      detail: "Bilinen açıklar yayın kararını doğrudan etkiliyor."
+      detail: "Known vulnerabilities directly affect the release decision."
     }
   ],
   caution: [
     {
-      title: "Secret taraması",
-      value: "Uyarı",
+      title: "Secret scanning",
+      value: "Warning",
       tone: "caution",
-      detail: "Şüpheli değerler var. Gerçek secret olup olmadığı doğrulanmalı."
+      detail: "Suspicious values were found and should be verified."
     },
     {
-      title: "Bağımlılıklar",
-      value: "Uyarı",
+      title: "Dependencies",
+      value: "Warning",
       tone: "caution",
-      detail: "Güncelleme bekleyen paketler güvenlik notunu düşürüyor."
+      detail: "Packages waiting for updates lower the security score."
     },
     {
-      title: "CI/CD politikası",
-      value: "Sınırlı risk",
+      title: "CI/CD policy",
+      value: "Limited Risk",
       tone: "caution",
-      detail: "Workflow ayarları daha sıkı bir yayın profiline alınmalı."
+      detail: "Workflow settings should be tightened before release."
     },
     {
-      title: "Bütünlük",
-      value: "İzlemede",
+      title: "Integrity",
+      value: "Monitoring",
       tone: "caution",
-      detail: "Kriptografik sinyaller çalışıyor, ancak karar düşük güvenle veriliyor."
+      detail: "Cryptographic signals are available, but the decision has lower confidence."
     }
   ],
   controlled: [
     {
       title: "SHA-256",
-      value: "Geçti",
+      value: "Passed",
       tone: "safe",
-      detail: "Hash kontrolü beklenen güven sinyalini üretiyor."
+      detail: "The hash check produced the expected trust signal."
     },
     {
-      title: "Dijital İmza",
-      value: "Kontrol Et",
+      title: "Digital Signature",
+      value: "Review",
       tone: "controlled",
-      detail: "İmza durumu kesin karar öncesi yeniden doğrulanmalı."
+      detail: "Verify the signature again before a final release decision."
     },
     {
-      title: "Secret Taraması",
-      value: "İzlenmeli",
+      title: "Secret Scanning",
+      value: "Monitor",
       tone: "attention",
-      detail: "Kritik sızıntı yok, fakat şüpheli desenler gözden geçirilmeli."
+      detail: "No critical exposure was found, but suspicious patterns should be reviewed."
     },
     {
       title: "CI/CD",
-      value: "Dikkatli İncele",
+      value: "Review Carefully",
       tone: "attention",
-      detail: "Workflow ayarları kabul edilebilir, yine de yayın öncesi incelenmeli."
+      detail: "Workflow settings are acceptable but should still be reviewed before release."
     }
   ],
   safe: [
     {
-      title: "Secret taraması",
-      value: "Temiz",
+      title: "Secret scanning",
+      value: "Clean",
       tone: "safe",
-      detail: "Secret kalıbı bulunmadı."
+      detail: "No secret pattern was found."
     },
     {
-      title: "Bağımlılıklar",
-      value: "Temiz",
+      title: "Dependencies",
+      value: "Clean",
       tone: "safe",
-      detail: "Bilinen riskli bağımlılık görünmüyor."
+      detail: "No known risky dependency is visible."
     },
     {
-      title: "CI/CD politikası",
-      value: "Güvenli",
+      title: "CI/CD policy",
+      value: "Secure",
       tone: "safe",
-      detail: "Workflow izinleri yayın için sağlıklı."
+      detail: "Workflow permissions look healthy for release."
     },
     {
-      title: "Bütünlük",
-      value: "Doğrulandı",
+      title: "Integrity",
+      value: "Verified",
       tone: "safe",
-      detail: "SHA-256, manifest ve dijital imza eşleşiyor."
+      detail: "SHA-256, manifest, and digital signature match."
     }
   ]
 };
